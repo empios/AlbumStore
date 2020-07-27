@@ -42,31 +42,12 @@ if (isset($_GET['delete'])){
 }
 
 
-if (isset($_GET['edit'])){
-    $id = $_GET['edit'];
-    $update = true;
-    $result = $mysqlConnection->query("SELECT utwor.utwor_id as 'id', utwor.nazwa AS 'utwor',
-    wykonawca.nazwa AS 'wykonawca', album.nazwa AS 'album', album.rok_wydania 
-    FROM wykonawca inner JOIN album ON album.wykonawca_id = wykonawca.wykonawca_id 
-    inner JOIN utwor ON utwor.album_id = album.album_id
-    WHERE utwor.utwor_id = $id") or die($mysqlConnection->error);
-    if ($result -> num_rows) {
-        $row = $result->fetch_array();
-        $songName = $row['utwor'];
-        $artistName = $row['wykonawca'];
-        $albumName = $row['album'];
-        $year = $row['rok_wydania'];
-    }
-
-    if (isset($_POST['update'])){
+    if (isset($_POST['editSave'])){
         $id = $_POST['id'];
-        $songName = $_POST['utwor'];
-        $artistName = $_POST['wykonawca'];
-        $albumName = $_POST['album'];
+        $songName = $_POST['songName'];
+        $artistName = $_POST['artistName'];
+        $albumName = $_POST['albumName'];
         $year = $_POST['year'];
-        $mysqlConnection->query("UPDATE utwor SET nazwa='$songName', wzrost=$height WHERE id=$id") or die ($mysqlConnection->error);
+
         header('location: index.php');
     }
-
-
-}
