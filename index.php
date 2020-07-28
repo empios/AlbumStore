@@ -21,7 +21,9 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
         integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous">
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/jquery.session@1.0.0/jquery.session.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"
+        integrity="sha512-aUhL2xOCrpLEuGD5f6tgHbLYEXRpYZ8G5yD+WlFrXrPy2IrWBlu6bih5C9H6qGsgqnU6mgx6KtU8TreHpASprw=="
+        crossorigin="anonymous"></script>
     <script>
     $(function() {
         $("#datepicker").datepicker({
@@ -30,6 +32,7 @@
     });
     </script>
     <script>
+
     function confirmationDelete(anchor) {
         var conf = confirm('Czy chcesz usunąć rekord?');
         if (conf)
@@ -41,7 +44,7 @@
 
 <body>
 
-    <?php  require_once 'dbController.php' ?>
+    <?php  require_once 'dbController.php';?>
     <?php 
       $mysqlConnection = new mysqli('localhost', 'root', '', 'interview') or die(mysqli_error($mysqlConnection));
       $resultQuery = $mysqlConnection -> query("SELECT * from wykonawca") or die ($mysqlConnection -> error);
@@ -77,7 +80,8 @@
                     <td><?php echo $row['rok_wydania'];?></td>
                     <td>
                         <input type="hidden" data-value="<?php echo $row['id'];?>" id="editId<?php echo $counter?>" />
-                        <button value="<?php echo $counter?>" type="button" class="editbutton btn btn-primary">Edytuj</button>
+                        <button value="<?php echo $counter?>" type="button"
+                            class="editbutton btn btn-primary">Edytuj</button>
                         <a onclick='javascript:confirmationDelete($(this));return false;'
                             href="dbController.php?delete=<?php echo $row['id'];?>" class="btn btn-danger">Usuń</a>
                     </td>
@@ -96,8 +100,8 @@
             <input type="text" class="form-control" name="albumName" placeholder="Nazwa albumu">
             <select name="artists" class="form-control">
                 <?php 
-        while ($artist = $resultQuery -> fetch_assoc()):
-        ?>
+                while ($artist = $resultQuery -> fetch_assoc()):
+                ?>
                 <option name="artist" value="<?php echo $artist['nazwa']?>"><?php echo $artist['nazwa']?></option>
                 <?php endwhile; ?>
             </select>
@@ -130,34 +134,47 @@
         </form>
     </div>
 
+
+
+
     <script>
     $(document).ready(function() {
         $('.editbutton').click(function() {
+            location.reload();
             let clickedButton = $(this).attr('value');
             let idObj = document.querySelector('#editId' + clickedButton);
             let id = idObj.getAttribute("data-value");
-            $.session.set("id", id);
-            $("#editModal").modal('show');
-            
-        })
-    })
+            $.cookie('id', id);
+            setTimeout(function(){
+                $("#editModal").modal();
+            }, 200);
+               
+
+        
+        });
+    });
+    </script>
+    
+
+    <script>
+        function reload(){
+            location.reload();
+        }
     </script>
 
     <div class="modal fade" id="editModal" role="dialog" tabindex="-1" role="dialog">
-        <?php 
-           
-              $idCookie = $_SESSION["id"];
-              $mysqlConnection = new mysqli('localhost', 'root', '', 'interview') or die(mysqli_error($mysqlConnection));
-              $resultQuery = $mysqlConnection -> query("SELECT * from wykonawca") or die ($mysqlConnection -> error);
-              $resultQuery2 = $mysqlConnection -> query("SELECT * from album") or die ($mysqlConnection -> error);
-              $resultQuery3 = $mysqlConnection->query("SELECT utwor.utwor_id as 'id', utwor.nazwa AS 'utwor',
-              wykonawca.nazwa AS 'wykonawca', album.nazwa AS 'album', album.rok_wydania 
-              FROM wykonawca inner JOIN album ON album.wykonawca_id = wykonawca.wykonawca_id 
-              inner JOIN utwor ON utwor.album_id = album.album_id
-              WHERE utwor.utwor_id = $idCookie") or die($mysqlConnection->error);
-              $resultLast = $resultQuery3 -> fetch_assoc();
-
-        ?>
+    <?php 
+    $mysqlConnection = new mysqli('localhost', 'root', '', 'interview') or die(mysqli_error($mysqlConnection));
+    $resultQuery = $mysqlConnection -> query("SELECT * from wykonawca") or die ($mysqlConnection -> error);
+    $resultQuery2 = $mysqlConnection -> query("SELECT * from album") or die ($mysqlConnection -> error);
+    $idCookie = $_COOKIE["id"];
+    $resultQuery3 = $mysqlConnection->query("SELECT utwor.utwor_id as 'id', utwor.nazwa AS 'utwor',
+    wykonawca.nazwa AS 'wykonawca', album.nazwa AS 'album', album.rok_wydania 
+    FROM wykonawca inner JOIN album ON album.wykonawca_id = wykonawca.wykonawca_id 
+    inner JOIN utwor ON utwor.album_id = album.album_id
+    WHERE utwor.utwor_id = $idCookie") or die($mysqlConnection->error);
+    $resultLast = $resultQuery3 -> fetch_assoc();
+    ?>
 
         <div class="modal-dialog">
             <div class="modal-content">
@@ -174,21 +191,21 @@
                         <input type="text" class="form-control" name="songName" placeholder="Nazwa utworu"
                             value="<?php echo $resultLast['utwor'];?>">
                         <br>
-                        <select name="albums" class="form-control">
+                        <select name="albums" class="form-control" value="<?php echo $resultLast['album'];?>">
                             <?php 
                             while ($album = $resultQuery2 -> fetch_assoc()):
                             ?>
-                            <option name="album" value="<?php echo $resultLast['album']?>"><?php echo $album['nazwa']?>
+                            <option name="album" value="<?php echo $album['nazwa'];?>"><?php echo $album['nazwa'];?>
                             </option>
                             <?php endwhile; ?>
                         </select>
                         <br>
-                        <select name="artists" class="form-control">
+                        <select name="artists" class="form-control" value="<?php echo $resultLast['wykonawca'];?>">
                             <?php 
                             while ($artist = $resultQuery -> fetch_assoc()):
                             ?>
-                            <option name="artist" value="<?php echo $resultLast['wykonawca'];?>">
-                                <?php echo $artist['nazwa']?>
+                            <option name="artist" value="<?php echo $artist['nazwa'];?>">
+                                <?php echo $artist['nazwa'];?>
                             </option>
                             <?php endwhile; ?>
                         </select>
@@ -210,22 +227,16 @@
                         <br>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" onclick="reload()"
+                    <button type="button" class="btn btn-danger"
                         data-dismiss="modal">Zamknij</button>
-                    <button type="button" name="editSave" class="btn btn-primary">Edytuj</button>
+                    <button type="button" onclick="reload()" name="editSave"
+                        class="btn btn-primary">Edytuj</button>
                 </div>
                 </form>
             </div>
         </div>
     </div>
     </div>
-
-    <script>
-    $('#editModal').on('hidden.bs.modal', function () { 
-        location.reload();
-    });
-    </script>
-
 
 </body>
 
